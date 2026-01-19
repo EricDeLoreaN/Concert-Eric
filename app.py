@@ -22,7 +22,7 @@ with st.sidebar:
     password_input = st.text_input("Code d'accès", type="password")
     
     is_admin = False
-    if password_input == MOT_DE_PASSE_ARTISTE:
+    if password_input == MOT_DE_PASSE:
         is_admin = True
         st.success("Mode Animateur activé !")
         
