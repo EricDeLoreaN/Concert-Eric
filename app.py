@@ -7,7 +7,7 @@ st.set_page_config(page_title="Live Vote", page_icon="🎤", layout="wide")
 
 # --- GESTION DU MOT DE PASSE ARTISTE ---
 # Changez "1234" par le mot de passe que vous voulez utiliser sur scène
-MOT_DE_PASSE_& = "epep"
+MOT_DE_PASSE = "epep"
 
 # --- CONNEXION GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
