@@ -6,8 +6,8 @@ import pandas as pd
 st.set_page_config(page_title="Live Vote", page_icon="🎤", layout="wide")
 
 # --- VOS REGLAGES PERSO ---
-MOT_DE_PASSE_ERIC = "epep" # Votre code secret pour l'admin
-LIEN_YOUTUBE = "https://www.youtube.com/@ric3231/playlists" 
+MOT_DE_PASSE_ARTISTE = "epep" # Votre code secret pour l'admin
+LIEN_YOUTUBE = "https://www.youtube.com/c/VOTRE_CHAINE" # Mettez votre vrai lien ici
 
 # --- GESTION DE L'ETAT (SESSION) ---
 if 'logged_in' not in st.session_state:
@@ -19,6 +19,7 @@ if 'user_name' not in st.session_state:
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def load_data():
+    # Charge les 4 premières colonnes de l'onglet Chansons
     return conn.read(worksheet="Chansons", usecols=[0, 1, 2, 3], ttl=0)
 
 def load_config():
@@ -36,7 +37,7 @@ with st.sidebar:
     password_input = st.text_input("Code Admin", type="password")
     
     is_admin = False
-    if password_input == MOT_DE_PASSE_ERIC:
+    if password_input == MOT_DE_PASSE_ARTISTE:
         is_admin = True
         st.success("Mode Animateur activé !")
         st.divider()
@@ -80,7 +81,7 @@ with col_yt:
     st.markdown(f"""
     <a href="{LIEN_YOUTUBE}" target="_blank" style="text-decoration: none;">
         <button style="width: 100%; background-color: #FF0000; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer;">
-            Ma Chaîne YouTube
+            📺 Ma Chaîne YouTube
         </button>
     </a>
     <div style="text-align: center; margin-top: 5px; font-size: 0.9em; color: gray;">
@@ -98,7 +99,7 @@ if not st.session_state['logged_in'] and not is_admin:
     with col_login1:
         nom_spectateur = st.text_input("Votre Prénom")
     with col_login2:
-        code_session = st.text_input("Code Session (donné par &ric)")
+        code_session = st.text_input("Code Session (donné par le chanteur)")
     
     if st.button("Entrer dans la salle 🎸"):
         real_code = load_config()
@@ -126,10 +127,14 @@ elif st.session_state['logged_in'] and not is_admin:
     selected_song_str = st.selectbox("🎵 Rechercher ou choisir un titre :", options, index=None, placeholder="Cliquez ici pour chercher...")
     
     if selected_song_str:
-        if st.button("J'aimerais entendre ce morceau"):
+        if st.button("J'aimerais entendre ce morceau 🎹"):
             artist, title = selected_song_str.split(" - ", 1)
             
             fresh_data = load_data()
+            
+            # --- CORRECTION DE L'ERREUR : on force la colonne en texte ---
+            fresh_data['DEDICACES'] = fresh_data['DEDICACES'].astype(str)
+            
             mask = (fresh_data['INTERPRETE / SINGER'] == artist) & (fresh_data['TITRE / TITLE'] == title)
             
             # Incrémenter les votes
@@ -139,7 +144,7 @@ elif st.session_state['logged_in'] and not is_admin:
             existing_dedi = str(fresh_data.loc[mask, 'DEDICACES'].values[0])
             user = st.session_state['user_name']
             
-            if existing_dedi == "nan" or existing_dedi == "":
+            if existing_dedi == "nan" or existing_dedi.strip() == "":
                 new_dedi = user
             else:
                 new_dedi = existing_dedi + ", " + user
@@ -157,6 +162,9 @@ elif is_admin:
         st.rerun()
 
     data = load_data()
+    # On s'assure que la colonne DEDICACES s'affiche bien (même vide)
+    data['DEDICACES'] = data['DEDICACES'].astype(str).replace('nan', '')
+    
     # On affiche les morceaux qui ont au moins 1 vote
     top_songs = data[data['VOTES'] > 0].sort_values(by="VOTES", ascending=False)
 
